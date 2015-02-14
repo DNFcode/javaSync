@@ -5,13 +5,28 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.nio.file.Paths;
 import java.nio.file.Files;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  *
  * @author dnf
  */
-public class Sync {
-    static private void syncFiles(FileInfo file, String destFolder) throws IOException{
+public class Sync implements Runnable{
+
+    final private HashSet<FileInfo> fldr1;
+    final private HashSet<FileInfo> fldr2;
+    final private String fldr1Name;
+    final private String fldr2Name;
+            
+    
+    public Sync(HashSet<FileInfo> fldr1, HashSet<FileInfo> fldr2, String fldr1Name, String fldr2Name) {
+        this.fldr1 = fldr1;
+        this.fldr1Name = fldr1Name;
+        this.fldr2 = fldr2;
+        this.fldr2Name = fldr2Name;
+    }
+    
+    private void syncFiles(FileInfo file, String destFolder) throws IOException{
         if(file.deleted)
             Files.delete(Paths.get(destFolder+file.name));
         else if(!file.deleted){
@@ -20,7 +35,7 @@ public class Sync {
         }
     }
     
-    static public void syncFolders(HashSet<FileInfo> fldr1, HashSet<FileInfo> fldr2, String fldr1Name, String fldr2Name) throws IOException{
+    public void syncFolders(HashSet<FileInfo> fldr1, HashSet<FileInfo> fldr2, String fldr1Name, String fldr2Name) throws IOException{
         for(FileInfo file1: fldr1){
             boolean newFile = true;
             for(FileInfo file2: fldr2){
@@ -45,5 +60,14 @@ public class Sync {
         }
         for(FileInfo file2: fldr2)
             syncFiles(file2, fldr1Name);
+    }
+
+    @Override
+    public void run() {
+        try {
+            syncFolders(fldr1, fldr2, fldr1Name, fldr2Name);
+        } catch (IOException ex) {
+            Logger.getLogger(Sync.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

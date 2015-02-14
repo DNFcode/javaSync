@@ -28,7 +28,8 @@ public class JavaSync {
             Paths.get(args[1]).toFile().mkdirs();
             HashSet<FileInfo> folderInfo1 = Data.getFolderInfo(args[0], settingsFile);
             HashSet<FileInfo> folderInfo2 = Data.getFolderInfo(args[1], settingsFile);
-            Sync.syncFolders(folderInfo1, folderInfo2, args[0], args[1]);
+            Thread syncThread = new Thread(new Sync(folderInfo1, folderInfo2, args[0], args[1]));
+            syncThread.run();
             Data.saveFolderInfo(args[0], settingsFile);
             Data.saveFolderInfo(args[1], settingsFile);
         } catch(IOException ioEx){
