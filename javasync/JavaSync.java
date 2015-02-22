@@ -1,8 +1,10 @@
 package javasync;
 
+import remote.SyncServer;
+import remote.SyncClient;
 import java.io.IOException;
 import java.util.HashSet;
-import java.nio.file.Paths;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,21 +19,33 @@ public class JavaSync {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        String settingsFile = ".folder_info";
+        Data.infoFileName = ".folder_info";
         String XMLsettingsFile = "settings.xml";
+        
         try{
-            if(args.length == 1)
-                args = XML.getFolders(args[0]);
-            else if(args.length == 0)
-                args = XML.getFolders(XMLsettingsFile);
-            Paths.get(args[0]).toFile().mkdirs();
-            Paths.get(args[1]).toFile().mkdirs();
-            HashSet<FileInfo> folderInfo1 = Data.getFolderInfo(args[0], settingsFile);
-            HashSet<FileInfo> folderInfo2 = Data.getFolderInfo(args[1], settingsFile);
-            Thread syncThread = new Thread(new Sync(folderInfo1, folderInfo2, args[0], args[1]));
-            syncThread.run();
-            Data.saveFolderInfo(args[0], settingsFile);
-            Data.saveFolderInfo(args[1], settingsFile);
+            Properties xml = XML.getLaunchInfo(XMLsettingsFile);
+            int RMIport = Integer.parseInt((String)xml.get("RMI_port"));
+            int TCPport = Integer.parseInt((String)xml.get("TCP_port"));
+            String folder1 = (String)xml.get("folder_1");
+            String folder2 = (String)xml.get("folder_2");
+            String IP = (String)xml.get("host_IP");
+            boolean remote = Boolean.parseBoolean((String)xml.get("remote"));
+            
+            if(args[0].equals("server")){
+                SyncServer serv = new SyncServer();
+                serv.start(RMIport, TCPport);
+            } else if(remote){
+                SyncClient client = new SyncClient();
+                client.start(IP, RMIport, TCPport, folder1, folder2);
+            }
+            else{
+                HashSet<FileInfo> folderInfo1 = Data.getFolderInfo(folder1);
+                HashSet<FileInfo> folderInfo2 = Data.getFolderInfo(folder2);
+                Thread syncThread = new Thread(new Sync(folderInfo1, folderInfo2, folder1, folder2, true));
+                syncThread.run();
+                Data.saveFolderInfo(folder1);
+                Data.saveFolderInfo(folder2);
+            }
         } catch(IOException ioEx){
             System.out.println(ioEx);
         } catch (ClassNotFoundException | SAXException | ParserConfigurationException ex) {

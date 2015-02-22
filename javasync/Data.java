@@ -17,11 +17,14 @@ import java.util.HashSet;
  * @author dnf
  */
 public class Data {
-    static public HashSet<FileInfo> getFolderInfo(String folderPath, String infoFileName) throws IOException, ClassNotFoundException{
-        HashSet<FileInfo> infoSet = getFolderInfo(Paths.get(folderPath), Paths.get(folderPath), new HashSet<>(), infoFileName);
+    
+    static public String infoFileName; 
+    
+    static public HashSet<FileInfo> getFolderInfo(String folderPath) throws IOException, ClassNotFoundException{
+        HashSet<FileInfo> infoSet = getFolderInfo(Paths.get(folderPath), Paths.get(folderPath), new HashSet<>());
         HashSet<String> filesNames;
         try{
-            filesNames = loadFolderInfo(folderPath, infoFileName);
+            filesNames = loadFolderInfo(folderPath);
         } catch(IOException ex){
             return infoSet;
         }
@@ -38,11 +41,11 @@ public class Data {
         return infoSet;
     }
     
-    static private HashSet<FileInfo> getFolderInfo(Path folderPath, Path currentPath, HashSet<FileInfo> set, String infoFileName) throws IOException{
+    static private HashSet<FileInfo> getFolderInfo(Path folderPath, Path currentPath, HashSet<FileInfo> set) throws IOException{
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentPath)) {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry)) {
-                    getFolderInfo(folderPath, entry, set, infoFileName);
+                    getFolderInfo(folderPath, entry, set);
                 } else {
                     String name = folderPath.relativize(entry).toString();
                     if(!name.equals(infoFileName)){
@@ -55,9 +58,9 @@ public class Data {
         }
     }
     
-    static public void saveFolderInfo(String folderPath, String fileName) throws IOException{
-        HashSet<FileInfo> infoSet = getFolderInfo(Paths.get(folderPath), Paths.get(folderPath), new HashSet<>(), fileName);
-        try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(folderPath+fileName))){
+    static public void saveFolderInfo(String folderPath) throws IOException{
+        HashSet<FileInfo> infoSet = getFolderInfo(Paths.get(folderPath), Paths.get(folderPath), new HashSet<>());
+        try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(folderPath+infoFileName))){
             HashSet<String> filesNames = new HashSet<>();
             for(FileInfo file: infoSet)
                 filesNames.add(file.name);
@@ -65,8 +68,8 @@ public class Data {
         }
     }
     
-    static public HashSet<String> loadFolderInfo(String folderPath, String fileName) throws IOException, ClassNotFoundException{
-        try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(folderPath+fileName))){
+    static public HashSet<String> loadFolderInfo(String folderPath) throws IOException, ClassNotFoundException{
+        try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(folderPath+infoFileName))){
             return (HashSet<String>) in.readObject();
         }
     }

@@ -17,25 +17,41 @@ public class Sync implements Runnable{
     final private HashSet<FileInfo> fldr2;
     final private String fldr1Name;
     final private String fldr2Name;
+    final private boolean local;
+    public HashSet<FileInfo> filesToDownload;
+    public HashSet<FileInfo> filesToUpload;
             
     
-    public Sync(HashSet<FileInfo> fldr1, HashSet<FileInfo> fldr2, String fldr1Name, String fldr2Name) {
+    public Sync(HashSet<FileInfo> fldr1, HashSet<FileInfo> fldr2, String fldr1Name, String fldr2Name, boolean local) {
         this.fldr1 = fldr1;
         this.fldr1Name = fldr1Name;
         this.fldr2 = fldr2;
         this.fldr2Name = fldr2Name;
-    }
-    
-    private void syncFiles(FileInfo file, String destFolder) throws IOException{
-        if(file.deleted)
-            Files.delete(Paths.get(destFolder+file.name));
-        else if(!file.deleted){
-            Paths.get(destFolder+file.name).toFile().getParentFile().mkdirs();
-            Files.copy(file.getPath(), Paths.get(destFolder+file.name), StandardCopyOption.REPLACE_EXISTING);
+        this.local = local;
+        if(!local){
+            filesToDownload = new HashSet<>();
+            filesToUpload = new HashSet<>();
         }
     }
     
-    public void syncFolders(HashSet<FileInfo> fldr1, HashSet<FileInfo> fldr2, String fldr1Name, String fldr2Name) throws IOException{
+    private void syncFiles(FileInfo file, String destFolder) throws IOException{
+        if(local){
+            if(file.deleted)
+                Files.delete(Paths.get(destFolder+file.name));
+            else if(!file.deleted){
+                Paths.get(destFolder+file.name).toFile().getParentFile().mkdirs();
+                Files.copy(file.getPath(), Paths.get(destFolder+file.name), StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        else if(file.deleted && destFolder == fldr1Name)
+            Files.delete(Paths.get(destFolder+file.name));
+        else if(destFolder == fldr1Name || file.deleted && destFolder == fldr2Name)
+            filesToDownload.add(file);
+        else if(destFolder == fldr2Name)
+            filesToUpload.add(file);
+    }
+    
+    public void syncFolders() throws IOException{
         for(FileInfo file1: fldr1){
             boolean newFile = true;
             for(FileInfo file2: fldr2){
@@ -46,9 +62,9 @@ public class Sync implements Runnable{
                         syncFiles(file1, fldr2Name);
                     else if(file2.deleted)
                         syncFiles(file2, fldr1Name);
-                    else if(file1.lastModifiedTime.compareTo(file2.lastModifiedTime) > 0)
+                    else if(file1.getLastModTime().compareTo(file2.getLastModTime()) > 0)
                         syncFiles(file1, fldr2Name);
-                    else if(file1.lastModifiedTime.compareTo(file2.lastModifiedTime) < 0)
+                    else if(file1.getLastModTime().compareTo(file2.getLastModTime()) < 0)
                         syncFiles(file2, fldr1Name);
                     fldr2.remove(file2);
                     newFile = false;
@@ -65,7 +81,7 @@ public class Sync implements Runnable{
     @Override
     public void run() {
         try {
-            syncFolders(fldr1, fldr2, fldr1Name, fldr2Name);
+            syncFolders();
         } catch (IOException ex) {
             Logger.getLogger(Sync.class.getName()).log(Level.SEVERE, null, ex);
         }
