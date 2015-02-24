@@ -18,7 +18,7 @@ public class JavaSync {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         Data.infoFileName = ".folder_info";
         String XMLsettingsFile = "settings.xml";
         
@@ -51,5 +51,5 @@ public class JavaSync {
         } catch (ClassNotFoundException | SAXException | ParserConfigurationException ex) {
             Logger.getLogger(JavaSync.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
+    }*/
 }

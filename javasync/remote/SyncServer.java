@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javasync.Data;
 import javasync.FileInfo;
+import javasync.MainJFrame;
 import javasync.Sync;
 
 /**
@@ -20,21 +21,22 @@ import javasync.Sync;
 public class SyncServer implements ServerIntf{
     
     private int TCPport;
+    private MainJFrame frame;
 
     @Override
     public void getFiles(ClientIntf stub, HashSet<FileInfo> folderInfo2, String folderName2, String folderName1) throws RemoteException, IOException, ClassNotFoundException{
-        System.out.println("CLIENT CONNECTED");
+        frame.ProgressBar.setValue(0);
         HashSet<FileInfo> folderInfo1 = Data.getFolderInfo(folderName1);
-        Sync sync = new Sync(folderInfo1, folderInfo2, folderName1, folderName2, false);
+        Sync sync = new Sync(folderInfo1, folderInfo2, folderName1, folderName2, false, null);
         sync.run();
-        Thread host = new Thread(new HostSocket(null, TCPport, sync.filesToUpload, folderName1, true));
+        Thread host = new Thread(new HostSocket(null, TCPport, sync.filesToUpload, folderName1, true, frame));
         host.start();
-        System.out.println("ASK FOR FILES");
         stub.getFiles(sync.filesToDownload);
     }
     
-    public void start(int port, int TCPport){
+    public void start(int port, int TCPport, MainJFrame frame){
         this.TCPport = TCPport;
+        this.frame = frame;
         
         try {
             ServerIntf stub = (ServerIntf)UnicastRemoteObject.exportObject(this, 0);

@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javasync.Data;
 import javasync.FileInfo;
+import javasync.MainJFrame;
 
 /**
  *
@@ -19,18 +20,20 @@ public class SyncClient implements ClientIntf{
     private String folderName1;
     private int TCPport;
     private String ip;
+    private MainJFrame frame;
     
     @Override
     public void getFiles(HashSet<FileInfo> folderInfo2) throws RemoteException {
-        Thread host = new Thread(new HostSocket(ip, TCPport, folderInfo2, folderName1, false));
+        Thread host = new Thread(new HostSocket(ip, TCPport, folderInfo2, folderName1, false, frame));
         host.start();
     }
     
-    public void start(String ip, int port,int TCPport, String folderName1, String folderName2){
+    public void start(String ip, int port,int TCPport, String folderName1, String folderName2, MainJFrame frame){
         SyncClient client = this;
         this.folderName1 = folderName1;
         this.TCPport = TCPport;
         this.ip = ip;
+        this.frame = frame;
         try {
             Registry registry = LocateRegistry.getRegistry(ip, port);
             ServerIntf server = (ServerIntf)registry.lookup("javaSync");
