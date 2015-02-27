@@ -5,8 +5,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.nio.file.Paths;
 import java.nio.file.Files;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Arrays;
 /**
  *
  * @author dnf
@@ -70,9 +72,11 @@ public class Sync implements Runnable{
                         syncFiles(file1, fldr2Name);
                     else if(file2.deleted)
                         syncFiles(file2, fldr1Name);
-                    else if(file1.getLastModTime().compareTo(file2.getLastModTime()) > 0)
+                    else if(file1.getLastModTime().compareTo(file2.getLastModTime()) > 0 &&
+                            !(Arrays.equals(file1.checksum, file2.checksum)))
                         syncFiles(file1, fldr2Name);
-                    else if(file1.getLastModTime().compareTo(file2.getLastModTime()) < 0)
+                    else if(file1.getLastModTime().compareTo(file2.getLastModTime()) < 0 &&
+                            !(Arrays.equals(file1.checksum, file2.checksum)))
                         syncFiles(file2, fldr1Name);
                     fldr2.remove(file2);
                     newFile = false;
@@ -97,6 +101,8 @@ public class Sync implements Runnable{
                 javasync.Data.saveFolderInfo(fldr2Name);
             }
         } catch (IOException ex) {
+            Logger.getLogger(Sync.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(Sync.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

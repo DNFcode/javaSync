@@ -16,13 +16,15 @@ public class FileInfo implements Serializable{
     final public String baseFolder;
     final public long lastModifiedTime;
     final public boolean deleted;
+    final public byte[] checksum;
     
     
-    public FileInfo(String name, String baseFolder, FileTime lastModifiedTime, boolean deleted){
+    public FileInfo(String name, String baseFolder, FileTime lastModifiedTime, boolean deleted, byte[] checksum){
         this.name = name;
         this.baseFolder = baseFolder;
         this.lastModifiedTime = lastModifiedTime==null?0:lastModifiedTime.toMillis();
         this.deleted = deleted;
+        this.checksum = checksum;
     }
 
     public Path getPath(){

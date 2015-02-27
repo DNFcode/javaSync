@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javasync.Data;
@@ -24,7 +25,7 @@ public class SyncServer implements ServerIntf{
     private MainJFrame frame;
 
     @Override
-    public void getFiles(ClientIntf stub, HashSet<FileInfo> folderInfo2, String folderName2, String folderName1) throws RemoteException, IOException, ClassNotFoundException{
+    public void getFiles(ClientIntf stub, HashSet<FileInfo> folderInfo2, String folderName2, String folderName1) throws RemoteException, IOException, ClassNotFoundException, NoSuchAlgorithmException{
         frame.ProgressBar.setValue(0);
         HashSet<FileInfo> folderInfo1 = Data.getFolderInfo(folderName1);
         Sync sync = new Sync(folderInfo1, folderInfo2, folderName1, folderName2, false, null);

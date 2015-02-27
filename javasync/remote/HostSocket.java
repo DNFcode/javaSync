@@ -12,6 +12,7 @@ import java.net.ServerSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.File;
+import java.security.NoSuchAlgorithmException;
 import javasync.Data;
 import javasync.FileInfo;
 import javasync.MainJFrame;
@@ -58,7 +59,7 @@ public class HostSocket implements Runnable{
         frame.ProgressBarLabel.setText("Status: done!");
     }
     
-    public void getFiles(Socket socket) throws IOException{
+    public void getFiles(Socket socket) throws IOException, NoSuchAlgorithmException{
         byte[] buffer = new byte[8192];
         DataInputStream dis = new DataInputStream(socket.getInputStream());
         float progress = frame.ProgressBar.getValue();

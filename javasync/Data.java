@@ -9,7 +9,11 @@ import java.io.ObjectOutputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
       
 /**
@@ -20,7 +24,7 @@ public class Data {
     
     static public String infoFileName; 
     
-    static public HashSet<FileInfo> getFolderInfo(String folderPath) throws IOException, ClassNotFoundException{
+    static public HashSet<FileInfo> getFolderInfo(String folderPath) throws IOException, ClassNotFoundException, NoSuchAlgorithmException{
         HashSet<FileInfo> infoSet = getFolderInfo(Paths.get(folderPath), Paths.get(folderPath), new HashSet<>());
         HashSet<String> filesNames;
         try{
@@ -36,12 +40,12 @@ public class Data {
                     break;
                 }
             if(deleted)
-                infoSet.add(new FileInfo(name, folderPath, null, deleted));
+                infoSet.add(new FileInfo(name, folderPath, null, deleted, null));
         }
         return infoSet;
     }
     
-    static private HashSet<FileInfo> getFolderInfo(Path folderPath, Path currentPath, HashSet<FileInfo> set) throws IOException{
+    static private HashSet<FileInfo> getFolderInfo(Path folderPath, Path currentPath, HashSet<FileInfo> set) throws IOException, NoSuchAlgorithmException{
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentPath)) {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry)) {
@@ -50,7 +54,15 @@ public class Data {
                     String name = folderPath.relativize(entry).toString();
                     if(!name.equals(infoFileName)){
                         FileTime modifyTime = Files.getLastModifiedTime(entry);
-                        set.add(new FileInfo(name, folderPath.toString()+"/", modifyTime, false));
+                        MessageDigest md = MessageDigest.getInstance("MD5");
+                        try (FileInputStream fileInput = new FileInputStream(entry.toFile());) {                 
+                            byte[] dataBytes = new byte[1024];
+                            int bytesRead = 0;
+                            while ((bytesRead = fileInput.read(dataBytes)) != -1) {
+                                md.update(dataBytes, 0, bytesRead);
+                            }
+                        }
+                        set.add(new FileInfo(name, folderPath.toString()+"/", modifyTime, false, md.digest()));
                     }
                 }
             }
@@ -58,7 +70,7 @@ public class Data {
         }
     }
     
-    static public void saveFolderInfo(String folderPath) throws IOException{
+    static public void saveFolderInfo(String folderPath) throws IOException, NoSuchAlgorithmException{
         HashSet<FileInfo> infoSet = getFolderInfo(Paths.get(folderPath), Paths.get(folderPath), new HashSet<>());
         try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(folderPath+infoFileName))){
             HashSet<String> filesNames = new HashSet<>();
